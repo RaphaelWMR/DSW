@@ -5,7 +5,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-
+var auth = require('../services/authentication');
+var check = require('../services/checkRole');
 
 router.post('/signup', (req, res) => {
     let user = req.body;
@@ -116,7 +117,7 @@ router.get('/checkToken', (req, res) => {
 })
 
 router.post('/changePassword', (req, res) => {
-    //const
+
 })
 
 module.exports = router;
