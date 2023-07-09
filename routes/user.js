@@ -86,7 +86,7 @@ router.post('/forgotPassword', (req, res) => {
     })
 })
 
-router.get('/get', (req, res) => {
+router.get('/get', auth.authenticateToken, (req, res) => {
     var query = "SELECT id,name,email,contactNumber,status FROM user WHERE role='user'";
     connection.query(query, (err, results) => {
         if (!err) {
