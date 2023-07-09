@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 var auth = require('../services/authentication');
 var check = require('../services/checkRole');
+const checkRole = require('../services/checkRole');
 
 router.post('/signup', (req, res) => {
     let user = req.body;
@@ -86,7 +87,7 @@ router.post('/forgotPassword', (req, res) => {
     })
 })
 
-router.get('/get', auth.authenticateToken, (req, res) => {
+router.get('/get', auth.authenticateToken, checkRole.checkRole, (req, res) => {
     var query = "SELECT id,name,email,contactNumber,status FROM user WHERE role='user'";
     connection.query(query, (err, results) => {
         if (!err) {
@@ -97,7 +98,7 @@ router.get('/get', auth.authenticateToken, (req, res) => {
     })
 })
 
-router.patch('/update', (req, res) => {
+router.patch('/update', auth.authenticateToken, checkRole.checkRole, (req, res) => {
     let user = req.body;
     var query = "UPDATE user SET status=? WHERE id = ?";
     connection.query(query, [user.status, user.id], (err, results) => {
@@ -112,12 +113,34 @@ router.patch('/update', (req, res) => {
     })
 })
 
-router.get('/checkToken', (req, res) => {
+router.get('/checkToken', auth.authenticateToken, (req, res) => {
     return res.status(200).json({ message: "true" });
 })
 
 router.post('/changePassword', (req, res) => {
-
+    const user = req.body;
+    const email = res.locale.email;
+    var query = "SELECT * FROM user WHERE email=? AND password=?";
+    connection.query(query, [email, user.oldPassword], (err, results) => {
+        if (!err) {
+            if (results.length <= 0) {
+                return res.status(400).json({ message: "Incorrect old password" });
+            } else if (results[0].password == user.oldPassword) {
+                query = "UPDATE user SET password=? WHERE email=?";
+                connection.query(query, [user.newPassword, email], (err, results) => {
+                    if (!err) {
+                        return res.status(200).json({ message: "Passsword Updated Successfully" });
+                    } else {
+                        return res.status(500).json(err);
+                    }
+                })
+            } else {
+                return res.status(400).json({ message: "Someting wen wrong. Prlease try again later" });
+            }
+        } else {
+            return res.status(500).json(err);
+        }
+    })
 })
 
 module.exports = router;
